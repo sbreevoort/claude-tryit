@@ -4,6 +4,7 @@ import { applications } from './Applications';
 import AuthenticatedRoute from './AuthenticatedRoute';
 import LandingPage from './landing/pages/LandingPage';
 import ProtectedRoute from './landing/components/ProtectedRoute';
+import Layout from './libs/shared/components/Layout/Layout';
 
 const ApplicationPortalRoutes = () => (
   <Routes>
@@ -26,12 +27,14 @@ const ApplicationPortalRoutes = () => (
               path={app.routePath}
               element={
                 <Suspense fallback={<div>Loading {app.name}...</div>}>
-                  <AppComponent
-                    name={app.name}
-                    routePath={app.routePath}
-                    accessRoles={app.accessRoles}
-                    avatar={app.avatar}
-                  />
+                  <Layout>
+                    <AppComponent
+                      name={app.name}
+                      routePath={app.routePath}
+                      accessRoles={app.accessRoles}
+                      avatar={app.avatar}
+                    />
+                  </Layout>
                 </Suspense>
               }
             />
