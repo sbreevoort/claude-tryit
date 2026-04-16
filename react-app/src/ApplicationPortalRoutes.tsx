@@ -1,13 +1,9 @@
 import { Suspense } from 'react';
-import type { ReactNode } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { applications } from './Applications';
 import AuthenticatedRoute from './AuthenticatedRoute';
 import LandingPage from './landing/pages/LandingPage';
-
-const ProtectedRoute = ({ children }: { children: ReactNode }) => (
-  <>{children}</>
-);
+import ProtectedRoute from './landing/components/ProtectedRoute';
 
 const ApplicationPortalRoutes = () => (
   <Routes>
@@ -18,15 +14,28 @@ const ApplicationPortalRoutes = () => (
         return (
           <Route
             key={app.routePath}
-            path={app.routePath}
             element={
-              <Suspense fallback={<div>Loading {app.name}...</div>}>
-                <ProtectedRoute>
-                  <AppComponent />
-                </ProtectedRoute>
-              </Suspense>
+              <ProtectedRoute
+                access={app.accessRoles}
+                scope={app.routePath}
+                appName={app.name}
+              />
             }
-          />
+          >
+            <Route
+              path={app.routePath}
+              element={
+                <Suspense fallback={<div>Loading {app.name}...</div>}>
+                  <AppComponent
+                    name={app.name}
+                    routePath={app.routePath}
+                    accessRoles={app.accessRoles}
+                    avatar={app.avatar}
+                  />
+                </Suspense>
+              }
+            />
+          </Route>
         );
       })}
     </Route>

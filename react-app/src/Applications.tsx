@@ -1,33 +1,38 @@
 import { lazy } from 'react';
 import type { LazyExoticComponent } from 'react';
 
-type PlaceholderComponent = () => JSX.Element;
+export interface AppComponentProps {
+  name: string;
+  routePath: string;
+  accessRoles: string[];
+  avatar?: string;
+}
+
+type AppComponent = (props: AppComponentProps) => JSX.Element;
 
 export interface Application {
   name: string;
   routePath: string;
   accessRoles: string[];
-  component: LazyExoticComponent<PlaceholderComponent>;
+  avatar?: string;
+  component: LazyExoticComponent<AppComponent>;
 }
-
-const MKBToolPlaceholder: PlaceholderComponent = () => <div>MKB Tool 2026</div>;
-const IntegrationDashboardPlaceholder: PlaceholderComponent = () => (
-  <div>Integration Dashboard</div>
-);
 
 export const applications: Application[] = [
   {
     name: 'MKB Tool 2026',
     routePath: '/rekentool',
     accessRoles: ['MKBTOOL_ADMIN'],
-    component: lazy(() => Promise.resolve({ default: MKBToolPlaceholder })),
+    component: lazy(() =>
+      import('./apps/rekentool').then((m) => ({ default: m.RekentoolApp }))
+    ),
   },
   {
     name: 'Integration Dashboard',
     routePath: '/id/transactions',
     accessRoles: ['Integration_Dashboard_Client_Int_Tech_user'],
     component: lazy(() =>
-      Promise.resolve({ default: IntegrationDashboardPlaceholder })
+      import('./apps/imon').then((m) => ({ default: m.IntegrationMonitorApp }))
     ),
   },
 ];
