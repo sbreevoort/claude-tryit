@@ -3,8 +3,7 @@ import type { ReactNode } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { applications } from './Applications';
 import AuthenticatedRoute from './AuthenticatedRoute';
-
-const LandingPage = () => <div>Welcome to Application Portal</div>;
+import LandingPage from './landing/pages/LandingPage';
 
 const ProtectedRoute = ({ children }: { children: ReactNode }) => (
   <>{children}</>
