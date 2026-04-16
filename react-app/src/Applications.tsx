@@ -35,4 +35,13 @@ export const applications: Application[] = [
       import('./apps/imon').then((m) => ({ default: m.IntegrationMonitorApp }))
     ),
   },
+  {
+    name: 'My Vitality',
+    avatar: 'VIT',
+    routePath: '/vitality',
+    accessRoles: ['VITALITY_USER'],
+    component: lazy(() =>
+      import('./apps/vitality').then((m) => ({ default: m.VitalityApp }))
+    ),
+  },
 ];
