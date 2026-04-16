@@ -11,6 +11,6 @@ export const fetchUser = async (): Promise<UserData> => {
     firstName: 'S',
     lastName: 'B',
     email: 'sb@tst.randstadgroep.nl',
-    roles: ['MKBTOOL_ADMIN', 'Integration_Dashboard_Client_Int_Tech_user'],
+    roles: ['MKBTOOL_ADMIN', 'Integration_Dashboard_Client_Int_Tech_user', 'VITALITY_USER'],
   };
 };
