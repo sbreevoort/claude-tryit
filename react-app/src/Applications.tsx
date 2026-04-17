@@ -53,4 +53,13 @@ export const applications: Application[] = [
       import('./apps/aitester').then((m) => ({ default: m.AITesterApp }))
     ),
   },
+  {
+    name: 'Pitch Generator',
+    avatar: 'CV',
+    routePath: '/pitch',
+    accessRoles: ['PITCH_GENERATOR'],
+    component: lazy(() =>
+      import('./apps/pitchgenerator').then((m) => ({ default: m.CandidatePitchApp }))
+    ),
+  },
 ];
