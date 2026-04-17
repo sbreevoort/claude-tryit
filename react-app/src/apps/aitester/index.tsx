@@ -12,14 +12,19 @@ export const AITesterApp = (_props: AppComponentProps) => {
   return (
     <div className="aitester">
       <h1>AI Connection Tester</h1>
-      <Button
-        type="button"
-        buttonStyle="filled"
-        isLoading={isPending}
-        onClick={() => mutate()}
-      >
-        Ping Claude
-      </Button>
+      
+      {/* Wrapper toegevoegd om de knop links uit te lijnen en rekken te voorkomen */}
+      <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: "1rem" }}>
+        <Button
+          type="button"
+          buttonStyle="filled"
+          isLoading={isPending}
+          onClick={() => mutate()}
+        >
+          Ping Claude
+        </Button>
+      </div>
+
       {data && (
         <p className="aitester-response">{data}</p>
       )}
