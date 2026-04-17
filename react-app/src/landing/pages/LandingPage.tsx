@@ -42,6 +42,7 @@ const LandingPage = () => {
               name={app.name}
               routePath={app.routePath}
               accessRoles={app.accessRoles}
+              avatar={app.avatar}
             />
           ))}
         </section>
