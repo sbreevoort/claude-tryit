@@ -30,7 +30,7 @@ const LandingPage = () => {
           </div>
         ) : (
           <h1 className="landing__title">
-            Welkom op de nieuwe Applicatie Portal, {user?.firstName}!
+            Welkom op de nieuwe AI✨ Application Portal, {user?.firstName}!
           </h1>
         )}
       </header>
