@@ -44,4 +44,13 @@ export const applications: Application[] = [
       import('./apps/vitality').then((m) => ({ default: m.VitalityApp }))
     ),
   },
+  {
+    name: 'AI Tester',
+    avatar: 'AI',
+    routePath: '/ai-test',
+    accessRoles: ['AI_TESTER'],
+    component: lazy(() =>
+      import('./apps/aitester').then((m) => ({ default: m.AITesterApp }))
+    ),
+  },
 ];

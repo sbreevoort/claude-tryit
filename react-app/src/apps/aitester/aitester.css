@@ -1,0 +1,21 @@
+.aitester {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 600px;
+}
+
+.aitester-response {
+  padding: 1rem;
+  background-color: #f0f4ff;
+  border-left: 4px solid #4a6cf7;
+  border-radius: 4px;
+}
+
+.aitester-error {
+  padding: 1rem;
+  background-color: #fff0f0;
+  border-left: 4px solid #e53e3e;
+  border-radius: 4px;
+  color: #c53030;
+}
