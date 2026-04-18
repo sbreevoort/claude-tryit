@@ -21,6 +21,7 @@ export interface Application {
 export const applications: Application[] = [
   {
     name: 'MKB Tool 2026',
+    avatar: 'MKB',
     routePath: '/rekentool',
     accessRoles: ['MKBTOOL_ADMIN'],
     component: lazy(() =>
