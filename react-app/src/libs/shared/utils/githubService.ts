@@ -20,11 +20,37 @@ export interface LinkedPR {
   state: string;
 }
 
+export type AgentStatus = 'pending' | 'in_progress' | 'review';
+
 export interface IssueStatus {
   state: 'open' | 'closed';
   number: number;
   url: string;
   linkedPRs: LinkedPR[];
+  agentStatus: AgentStatus;
+}
+
+interface IssueComment {
+  body: string;
+  user: {
+    login: string;
+    type: string;
+  };
+}
+
+const REVIEW_KEYWORDS = ['commit', 'pushed', 'branch', 'closes #'];
+
+function determineAgentStatus(comments: IssueComment[]): AgentStatus {
+  const agentComments = comments.filter(
+    (c) => c.user.type === 'Bot' || c.user.login.endsWith('[bot]')
+  );
+
+  if (agentComments.length === 0) return 'pending';
+
+  const latestBody = agentComments[agentComments.length - 1].body.toLowerCase();
+  const isReview = REVIEW_KEYWORDS.some((kw) => latestBody.includes(kw));
+
+  return isReview ? 'review' : 'in_progress';
 }
 
 export const createIssue = async (
@@ -54,10 +80,19 @@ export const fetchIssueStatus = async (
 ): Promise<IssueStatus> => {
   const [owner, repoName] = repo.split('/');
 
-  const issueRes = await fetch(
-    `${GITHUB_API}/repos/${owner}/${repoName}/issues/${issueNumber}`,
-    { headers: getHeaders() }
-  );
+  const [issueRes, commentsRes, searchRes] = await Promise.all([
+    fetch(`${GITHUB_API}/repos/${owner}/${repoName}/issues/${issueNumber}`, {
+      headers: getHeaders(),
+    }),
+    fetch(
+      `${GITHUB_API}/repos/${owner}/${repoName}/issues/${issueNumber}/comments?per_page=100`,
+      { headers: getHeaders() }
+    ),
+    fetch(
+      `${GITHUB_API}/search/issues?q=is:pr+repo:${owner}/${repoName}+%23${issueNumber}`,
+      { headers: getHeaders() }
+    ),
+  ]);
 
   if (!issueRes.ok) {
     throw new Error(`GitHub API error: ${issueRes.status}`);
@@ -65,10 +100,8 @@ export const fetchIssueStatus = async (
 
   const issue = await issueRes.json();
 
-  const searchRes = await fetch(
-    `${GITHUB_API}/search/issues?q=is:pr+repo:${owner}/${repoName}+%23${issueNumber}`,
-    { headers: getHeaders() }
-  );
+  const comments: IssueComment[] = commentsRes.ok ? await commentsRes.json() : [];
+  const agentStatus = determineAgentStatus(comments);
 
   const linkedPRs: LinkedPR[] = [];
   if (searchRes.ok) {
@@ -90,5 +123,6 @@ export const fetchIssueStatus = async (
     number: issue.number,
     url: issue.html_url,
     linkedPRs,
+    agentStatus,
   };
 };

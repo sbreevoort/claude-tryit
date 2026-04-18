@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import type { AppComponentProps } from '../../Applications';
 import { Button } from '../../libs/shared/components';
@@ -6,7 +6,7 @@ import {
   createIssue,
   fetchIssueStatus,
 } from '../../libs/shared/utils/githubService';
-import type { CreatedIssue, IssueStatus } from '../../libs/shared/utils/githubService';
+import type { AgentStatus, CreatedIssue, IssueStatus } from '../../libs/shared/utils/githubService';
 import './Creator.css';
 
 const GITHUB_REPO = 'sbreevoort/claude-tryit';
@@ -68,6 +68,25 @@ const generateIssue = async (idea: string): Promise<GeneratedIssue> => {
   const jsonString = jsonMatch ? jsonMatch[1].trim() : rawText.trim();
   return JSON.parse(jsonString) as GeneratedIssue;
 };
+
+const AGENT_STATUS_CONFIG: Record<AgentStatus, { label: string; icon: ReactNode }> = {
+  pending: { label: 'Wacht op Claude...', icon: '⏳' },
+  in_progress: { label: 'Claude is aan het bouwen...', icon: <span className="creator__spinner" /> },
+  review: { label: 'Code gepusht (Klaar voor review)', icon: '✓' },
+};
+
+function AgentStatusRow({ agentStatus }: { agentStatus: AgentStatus }) {
+  const { label, icon } = AGENT_STATUS_CONFIG[agentStatus];
+  return (
+    <div className={`creator__agent-status creator__agent-status--${agentStatus}`}>
+      <span className="creator__agent-status-icon" aria-hidden="true">{icon}</span>
+      <div>
+        <span className="creator__tracker-label">Agent Status</span>
+        <span className="creator__agent-status-text">{label}</span>
+      </div>
+    </div>
+  );
+}
 
 export const CreatorApp = (_props: AppComponentProps) => {
   const [step, setStep] = useState<Step>('input');
@@ -257,6 +276,10 @@ export const CreatorApp = (_props: AppComponentProps) => {
               )}
             </div>
 
+            {issueStatus && (
+              <AgentStatusRow agentStatus={issueStatus.agentStatus} />
+            )}
+
             {issueStatus && issueStatus.linkedPRs.length > 0 && (
               <div className="creator__tracker-prs">
                 <h3>Linked Pull Requests</h3>
@@ -276,12 +299,6 @@ export const CreatorApp = (_props: AppComponentProps) => {
                   </div>
                 ))}
               </div>
-            )}
-
-            {issueStatus && issueStatus.linkedPRs.length === 0 && (
-              <p className="creator__tracker-waiting">
-                Waiting for the AI agent to pick up the issue and create a PR...
-              </p>
             )}
 
             <p className="creator__tracker-note">Auto-refreshing every 30 seconds.</p>
