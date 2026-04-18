@@ -29,7 +29,9 @@ export const pingClaude = async (): Promise<string> => {
   });
 
   if (!response.ok) {
-    throw new Error(`API error: ${response.status} ${response.statusText}`);
+    const errorData = await response.json().catch(() => null);
+    const message = errorData?.error?.message || response.statusText;
+    throw new Error(`API Error ${response.status}: ${message}`);
   }
 
   const data: AnthropicResponse = await response.json();
