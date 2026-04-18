@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import Sidebar from './Sidebar';
-import Header from './Header';
 import './Layout.css';
 
 interface LayoutProps {
@@ -12,7 +11,6 @@ const Layout = ({ children }: LayoutProps) => {
     <div className="layout">
       <Sidebar />
       <div className="layout__main-col">
-        <Header />
         <main className="layout__content">{children}</main>
       </div>
     </div>
