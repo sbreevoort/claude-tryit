@@ -21,36 +21,36 @@
 
 /* Filled */
 .button.style-filled {
-    background-color: #3b82f6;
-    border-color: #3b82f6;
+    background-color: var(--brand-blue);
+    border-color: var(--brand-blue);
     color: #ffffff;
 }
 
 .button.style-filled:hover:not(:disabled) {
-    background-color: #2563eb;
-    border-color: #2563eb;
+    background-color: var(--brand-blue-hover);
+    border-color: var(--brand-blue-hover);
 }
 
 /* Ghost */
 .button.style-ghost {
     background-color: transparent;
-    border-color: #3b82f6;
-    color: #3b82f6;
+    border-color: var(--brand-blue);
+    color: var(--brand-blue);
 }
 
 .button.style-ghost:hover:not(:disabled) {
-    background-color: #eff6ff;
+    background-color: var(--bg-surface-hover);
 }
 
 /* Plain */
 .button.style-plain {
     background-color: transparent;
     border-color: transparent;
-    color: #3b82f6;
+    color: var(--brand-blue);
 }
 
 .button.style-plain:hover:not(:disabled) {
-    background-color: #eff6ff;
+    background-color: var(--bg-surface-hover);
 }
 
 /* Disabled */

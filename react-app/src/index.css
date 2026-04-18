@@ -1,3 +1,41 @@
+:root {
+  --bg-app: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-surface-hover: #f3f4f6;
+  --bg-badge: #f3f4f6;
+  --border-color: #e5e7eb;
+  --border-hover: #9ca3af;
+  --text-primary: #374151;
+  --text-secondary: #6b7280;
+  --text-heading: #1a1a2e;
+  --text-strong: #111827;
+  --brand-primary: #1976d2;
+  --brand-primary-hover: #1565c0;
+  --brand-blue: #3b82f6;
+  --brand-blue-hover: #2563eb;
+  --brand-accent: #4a6cf7;
+  --sidebar-bg: #1a1a2e;
+}
+
+[data-theme="dark"] {
+  --bg-app: #0f172a;
+  --bg-surface: #1e293b;
+  --bg-surface-hover: #334155;
+  --bg-badge: #334155;
+  --border-color: #334155;
+  --border-hover: #475569;
+  --text-primary: #cbd5e1;
+  --text-secondary: #94a3b8;
+  --text-heading: #f1f5f9;
+  --text-strong: #f8fafc;
+  --brand-primary: #3b82f6;
+  --brand-primary-hover: #2563eb;
+  --brand-blue: #3b82f6;
+  --brand-blue-hover: #2563eb;
+  --brand-accent: #818cf8;
+  --sidebar-bg: #0f172a;
+}
+
 *,
 *::before,
 *::after {
@@ -7,4 +45,7 @@
 body {
   margin: 0;
   font-family: system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
