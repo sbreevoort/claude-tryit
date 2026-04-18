@@ -9,39 +9,15 @@ interface DressageTest {
   steps: string[];
 }
 
-const DRESSAGE_TESTS: DressageTest[] = [
-  {
-    id: 'B20',
-    title: 'B20',
-    steps: [
-      'A-X Binnenkomen in arbeidsdraf',
-      'X halthouden en groeten',
-      'C Rechterhand',
-      'E Linkerhand',
-      'B Rechtsom volte 10 meter',
-      'A Linksom aanhouden en doorlopen',
-      'E Linkerhand',
-      'B Rechtsom volte 10 meter',
-      'A Linksom aanhouden en doorlopen',
-      'X Halt, groeten en verlaten',
-    ],
-  },
-  {
-    id: 'B21',
-    title: 'B21',
-    steps: [
-      'A Binnenkomen in arbeidsdraf',
-      'X halthouden en groeten',
-      'C Linkerhand',
-      'E Rechterhand',
-      'B Linksom volte 10 meter',
-      'A Rechtsom aanhouden en doorlopen',
-      'E Rechterhand',
-      'B Linksom volte 10 meter',
-      'A Rechtsom aanhouden en doorlopen',
-      'X Halt, groeten en verlaten',
-    ],
-  },
+const DRESSAGE_TESTS: DressageTest[] = [{
+        "id": "B20",
+        "title": "Proef B20",
+        "steps": ["A-X-C: Binnenkomen in arbeidsdraf", "C: Linkerhand", "H-K: Gebroken lijn 5 meter", "F-X-H: Van hand veranderen en enkele passen de draf verruimen", "M-F: Gebroken lijn 5 meter", "E-B-E: Grote volte en na enkele drafpassen het paard de hals laten strekken", "Tussen E en H: Teugels op maat maken", "B-E-B: Grote volte", "Op de volte tussen E en B: Arbeidsgalop rechts aanspringen", "A-X-A: Grote volte", "Tussen A en K: Overgang arbeidsdraf", "E-M: Van hand veranderen", "C-X-C: Grote volte", "Op de volte tussen X en C: Arbeidsgalop links aanspringen", "E-B-E: Grote volte", "Tussen E en K: Overgang arbeidsdraf", "Tussen A en F: Overgang arbeidsstap", "F-B: Arbeidsstap", "B: Afwenden", "E: Rechterhand", "Tussen E en H: Overgang arbeidsdraf", "M-X-K: Van hand veranderen en enkele passen de draf verruimen", "A: Afwenden", "Tussen D-X: Overgang arbeidsstap", "Tussen X-G: Halthouden en groeten", "In stap de rijbaan verlaten"]
+    }, {
+        "id": "B21",
+        "title": "Proef B21",
+        "steps": ["A-X-C: Binnenkomen in arbeidsdraf", "C: Rechterhand", "M-X-K: Van hand veranderen en enkele passen de draf verruimen", "Tussen A en F: Overgang arbeidsstap", "F-E: Van hand veranderen en enkele passen de stap verruimen", "Tussen E en H: Overgang arbeidsdraf", "C-X-C: Grote volte", "Op de volte tussen X en C: Arbeidsgalop rechts aanspringen", "B-E-B: Grote volte", "Tussen F en A: Overgang arbeidsdraf", "K-B: Van hand veranderen", "C-X-C: Grote volte", "Op de volte tussen X en C: Arbeidsgalop links aanspringen", "E-B-E: Grote volte", "Tussen K en A: Overgang arbeidsdraf", "B-E-B: Grote volte en na enkele drafpassen het paard de hals laten strekken", "Tussen B en M: Teugels op maat maken", "C: Afwenden", "A: Rechterhand", "K-X-M: Van hand veranderen en enkele passen de draf verruimen", "E: Afwenden", "B: Rechterhand", "A: Afwenden", "Tussen D en X: Overgang arbeidsstap", "Tussen X en G: Halthouden en groeten", "In stap de rijbaan verlaten"]
+    }
 ];
 
 const speakStep = (text: string) => {
