@@ -38,8 +38,6 @@ interface IssueComment {
   };
 }
 
-const REVIEW_KEYWORDS = ['commit', 'pushed', 'branch', 'closes #'];
-
 function determineAgentStatus(comments: IssueComment[]): AgentStatus {
   const agentComments = comments.filter(
     (c) => c.user.type === 'Bot' || c.user.login.endsWith('[bot]')
@@ -47,10 +45,11 @@ function determineAgentStatus(comments: IssueComment[]): AgentStatus {
 
   if (agentComments.length === 0) return 'pending';
 
-  const latestBody = agentComments[agentComments.length - 1].body.toLowerCase();
-  const isReview = REVIEW_KEYWORDS.some((kw) => latestBody.includes(kw));
+  const isFinished = agentComments.some((c) =>
+    c.body.toLowerCase().includes('claude finished')
+  );
 
-  return isReview ? 'review' : 'in_progress';
+  return isFinished ? 'review' : 'in_progress';
 }
 
 export const createIssue = async (
