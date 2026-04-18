@@ -63,4 +63,13 @@ export const applications: Application[] = [
       import('./apps/pitchgenerator').then((m) => ({ default: m.CandidatePitchApp }))
     ),
   },
+  {
+    name: 'Creator',
+    avatar: 'CR',
+    routePath: '/creator',
+    accessRoles: ['CREATOR_ADMIN'],
+    component: lazy(() =>
+      import('./apps/creator').then((m) => ({ default: m.CreatorApp }))
+    ),
+  },
 ];
