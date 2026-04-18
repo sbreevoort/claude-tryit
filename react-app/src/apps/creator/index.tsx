@@ -72,7 +72,7 @@ const generateIssue = async (idea: string): Promise<GeneratedIssue> => {
 const AGENT_STATUS_CONFIG: Record<AgentStatus, { label: string; icon: ReactNode }> = {
   pending: { label: 'Wacht op Claude...', icon: '⏳' },
   in_progress: { label: 'Claude is aan het bouwen...', icon: <span className="creator__spinner" /> },
-  review: { label: 'Code gepusht (Klaar voor review)', icon: '✓' },
+  review: { label: 'Code klaar voor review', icon: '✓' },
 };
 
 function AgentStatusRow({ agentStatus }: { agentStatus: AgentStatus }) {
@@ -139,7 +139,7 @@ export const CreatorApp = (_props: AppComponentProps) => {
     };
 
     poll();
-    pollingRef.current = setInterval(poll, 30000);
+    pollingRef.current = setInterval(poll, 10000);
 
     return () => {
       if (pollingRef.current) clearInterval(pollingRef.current);
@@ -301,7 +301,7 @@ export const CreatorApp = (_props: AppComponentProps) => {
               </div>
             )}
 
-            <p className="creator__tracker-note">Auto-refreshing every 30 seconds.</p>
+            <p className="creator__tracker-note">Auto-refreshing every 10 seconds.</p>
           </div>
 
           <div className="flex justify-end gap-2">

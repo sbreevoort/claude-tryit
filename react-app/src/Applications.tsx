@@ -72,4 +72,13 @@ export const applications: Application[] = [
       import('./apps/creator').then((m) => ({ default: m.CreatorApp }))
     ),
   },
+  {
+    name: 'Dressuur Voorlezer',
+    avatar: 'DR',
+    routePath: '/dressage-reader',
+    accessRoles: ['DRESSAGE_READER'],
+    component: lazy(() =>
+      import('./apps/dressagereader').then((m) => ({ default: m.DressageReaderApp }))
+    ),
+  },
 ];
