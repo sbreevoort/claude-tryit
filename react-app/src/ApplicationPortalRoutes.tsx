@@ -1,13 +1,22 @@
 import { Suspense } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Outlet } from 'react-router-dom';
 import { applications } from './Applications';
 import AuthenticatedRoute from './AuthenticatedRoute';
 import LandingPage from './landing/pages/LandingPage';
 import ProtectedRoute from './landing/components/ProtectedRoute';
 import Layout from './libs/shared/components/Layout/Layout';
+import Header from './libs/shared/components/Layout/Header';
+
+const RootLayout = () => (
+  <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+    <Header />
+    <Outlet />
+  </div>
+);
 
 const ApplicationPortalRoutes = () => (
   <Routes>
+    <Route element={<RootLayout />}>
     <Route path="/" element={<LandingPage />} />
     <Route element={<AuthenticatedRoute />}>
       {applications.map((app) => {
@@ -41,6 +50,7 @@ const ApplicationPortalRoutes = () => (
           </Route>
         );
       })}
+    </Route>
     </Route>
   </Routes>
 );

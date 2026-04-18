@@ -1,5 +1,6 @@
 .landing {
-  min-height: 100vh;
+  flex: 1;
+  overflow-y: auto;
   background: var(--bg-app);
   padding: 0 1.5rem 4rem;
   transition: background 0.2s ease;
