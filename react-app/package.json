@@ -15,6 +15,7 @@
       "generate:api": "orval"
   },
   "dependencies": {
+    "@octokit/rest": "^21.1.1",
     "@tanstack/react-query": "^5.74.4",
     "axios": "^1.8.4",
     "clsx": "^2.1.1",
