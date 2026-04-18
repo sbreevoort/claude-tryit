@@ -57,17 +57,21 @@ const speakStep = (text: string) => {
 export const DressageReaderApp = (_props: AppComponentProps) => {
   const [selectedTest, setSelectedTest] = useState<DressageTest | null>(null);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [isFinished, setIsFinished] = useState(false);
 
   const handleSelectTest = (test: DressageTest) => {
     setSelectedTest(test);
     setCurrentStepIndex(0);
+    setIsFinished(false);
   };
 
-  const handleVolgendeStap = () => {
+  const handleVoorlezen = () => {
     if (!selectedTest) return;
     speakStep(selectedTest.steps[currentStepIndex]);
     if (currentStepIndex < selectedTest.steps.length - 1) {
       setCurrentStepIndex((i) => i + 1);
+    } else {
+      setIsFinished(true);
     }
   };
 
@@ -79,12 +83,14 @@ export const DressageReaderApp = (_props: AppComponentProps) => {
 
   const handleReset = () => {
     setCurrentStepIndex(0);
+    setIsFinished(false);
   };
 
   const handleBack = () => {
     window.speechSynthesis.cancel();
     setSelectedTest(null);
     setCurrentStepIndex(0);
+    setIsFinished(false);
   };
 
   if (!selectedTest) {
@@ -111,8 +117,6 @@ export const DressageReaderApp = (_props: AppComponentProps) => {
     );
   }
 
-  const isLastStep = currentStepIndex === selectedTest.steps.length - 1;
-
   return (
     <div className="dressage-reader">
       <div className="dressage-reader__header">
@@ -138,10 +142,10 @@ export const DressageReaderApp = (_props: AppComponentProps) => {
           type="button"
           buttonStyle="filled"
           className="dressage-reader__volgende-btn"
-          onClick={handleVolgendeStap}
-          disabled={isLastStep}
+          onClick={handleVoorlezen}
+          disabled={isFinished}
         >
-          Volgende Stap
+          Voorlezen stap
         </Button>
         <div className="dressage-reader__secondary-controls">
           <Button
