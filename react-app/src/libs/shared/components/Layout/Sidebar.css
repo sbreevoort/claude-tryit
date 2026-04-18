@@ -1,12 +1,12 @@
 .sidebar {
-  background: #1a1a2e;
+  background: var(--sidebar-bg);
   color: #ffffff;
   width: 220px;
   height: 100vh;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  transition: width 0.25s ease;
+  transition: width 0.25s ease, background 0.2s ease;
   overflow: hidden;
 }
 

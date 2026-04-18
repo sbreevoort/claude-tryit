@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchUser } from '../../utils/userApi';
+import { useTheme } from '../../contexts/ThemeContext/useTheme';
 import './Header.css';
 
 const Header = () => {
@@ -7,6 +8,7 @@ const Header = () => {
     queryKey: ['user'],
     queryFn: fetchUser,
   });
+  const { theme, toggleTheme } = useTheme();
 
   const displayName = user ? `${user.firstName}. ${user.lastName}.` : '…';
 
@@ -14,6 +16,15 @@ const Header = () => {
     <header className="header">
       <div className="header__user">
         <span className="header__greeting">Welkom, {displayName}</span>
+        <button
+          className="header__theme-toggle"
+          type="button"
+          onClick={toggleTheme}
+          aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+          title={theme === 'light' ? 'Dark mode' : 'Light mode'}
+        >
+          {theme === 'light' ? '☾' : '☀'}
+        </button>
         <button className="header__logout" type="button">
           Uitloggen
         </button>

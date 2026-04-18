@@ -7,9 +7,11 @@
 
 .aitester-response {
   padding: 1rem;
-  background-color: #f0f4ff;
-  border-left: 4px solid #4a6cf7;
+  background-color: var(--bg-surface);
+  border-left: 4px solid var(--brand-accent);
   border-radius: 4px;
+  color: var(--text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .aitester-error {
@@ -20,4 +22,9 @@
   color: #c53030;
   word-break: break-word;
   white-space: pre-wrap;
+}
+
+[data-theme="dark"] .aitester-error {
+  background-color: #2d1515;
+  color: #fca5a5;
 }
