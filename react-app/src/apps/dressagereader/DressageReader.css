@@ -1,92 +1,271 @@
+/* Two-pane layout filling the content area */
 .dressage-reader {
-  max-width: 640px;
-  margin: 0 auto;
-  padding: 1.5rem;
-}
-
-.dressage-reader h1 {
-  margin-bottom: 0.5rem;
-}
-
-.dressage-reader__intro {
-  color: #555;
-  margin-bottom: 2rem;
-}
-
-.dressage-reader__test-selection {
   display: flex;
   gap: 1rem;
-  flex-wrap: wrap;
+  /* Fill the layout content area: 100vh minus header (60px) minus layout padding (2rem top + 2rem bottom) */
+  height: calc(100vh - 60px - 4rem);
 }
 
-.dressage-reader__test-btn {
-  min-width: 120px;
-  font-size: 1.25rem;
-  padding: 1rem 2rem;
+/* ---- Left panel ---- */
+.dressage-reader__panel {
+  width: 240px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  overflow-y: auto;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.25rem;
 }
 
-.dressage-reader__header {
+.dressage-reader__panel-top {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.dressage-reader__panel-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+
+.dressage-reader__panel-subtitle {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+/* ---- Section labels ---- */
+.dressage-reader__section-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-secondary);
+  margin-bottom: 0.4rem;
+}
+
+/* ---- Voice selector ---- */
+.dressage-reader__voice-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.dressage-reader__voice-select {
+  width: 100%;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-app);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.dressage-reader__voice-select:hover {
+  border-color: var(--border-hover);
+}
+
+.dressage-reader__voice-select:focus {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 1px;
+}
+
+/* ---- Test list ---- */
+.dressage-reader__test-section {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.dressage-reader__test-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.dressage-reader__test-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-app);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  font-family: inherit;
+}
+
+.dressage-reader__test-item:hover {
+  background: var(--bg-surface-hover);
+  border-color: var(--border-hover);
+}
+
+.dressage-reader__test-item--active {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.dressage-reader__test-item--active:hover {
+  background: var(--brand-primary-hover);
+  border-color: var(--brand-primary-hover);
+}
+
+/* ---- Right content area ---- */
+.dressage-reader__content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  min-width: 0;
+}
+
+/* ---- Welcome screen ---- */
+.dressage-reader__welcome {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+}
+
+.dressage-reader__welcome-icon {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.dressage-reader__welcome h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--text-heading);
+}
+
+.dressage-reader__welcome p {
+  margin: 0;
+  max-width: 260px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* ---- Content header ---- */
+.dressage-reader__content-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  padding: 1rem 1.25rem 0.875rem;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+  gap: 0.75rem;
 }
 
-.dressage-reader__header h1 {
-  margin-bottom: 0;
+.dressage-reader__test-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+
+.dressage-reader__badge {
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  background: var(--bg-badge);
+  padding: 0.2rem 0.65rem;
+  border-radius: 20px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ---- Steps list ---- */
+.dressage-reader__steps-wrap {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.75rem 1.25rem;
 }
 
 .dressage-reader__steps {
   list-style: decimal;
   padding-left: 1.5rem;
-  margin-bottom: 2rem;
+  margin: 0;
 }
 
 .dressage-reader__step {
-  padding: 0.5rem 0.75rem;
+  padding: 0.45rem 0.5rem;
   border-radius: 6px;
-  margin-bottom: 0.25rem;
-  transition: background-color 0.2s;
+  margin-bottom: 0.1rem;
+  transition: background 0.12s;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  line-height: 1.45;
+}
+
+.dressage-reader__step--done {
+  color: var(--text-secondary);
+  opacity: 0.55;
 }
 
 .dressage-reader__step--active {
-  background-color: #fef3c7;
-  font-weight: 700;
+  background: #fef3c7;
+  font-weight: 600;
   color: #92400e;
-  border-left: 4px solid #f59e0b;
-  padding-left: 0.5rem;
+  border-left: 3px solid #f59e0b;
+  padding-left: 0.4rem;
 }
 
-.dressage-reader__controls {
+[data-theme="dark"] .dressage-reader__step--active {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fde68a;
+  border-left-color: #d97706;
+}
+
+/* ---- Sticky footer ---- */
+.dressage-reader__footer {
   display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  align-items: stretch;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1.25rem;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  flex-shrink: 0;
+  border-radius: 0 0 12px 12px;
 }
 
-.dressage-reader__volgende-btn {
-  font-size: 1.5rem !important;
-  padding: 1.25rem 2rem !important;
+.dressage-reader__play-btn {
+  font-size: 1rem !important;
+  padding: 0.75rem 1.75rem !important;
   background-color: #16a34a !important;
   border-color: #16a34a !important;
-  min-height: 72px;
-  border-radius: 12px !important;
+  border-radius: 8px !important;
+  min-width: 180px;
+  font-weight: 600 !important;
 }
 
-.dressage-reader__volgende-btn:hover:not(:disabled) {
+.dressage-reader__play-btn:hover:not(:disabled) {
   background-color: #15803d !important;
   border-color: #15803d !important;
 }
 
-.dressage-reader__volgende-btn:disabled {
-  opacity: 0.5;
+.dressage-reader__play-btn:disabled {
+  opacity: 0.45;
   cursor: not-allowed;
-}
-
-.dressage-reader__secondary-controls {
-  display: flex;
-  gap: 0.75rem;
-  justify-content: center;
 }
