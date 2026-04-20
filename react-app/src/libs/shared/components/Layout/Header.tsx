@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { fetchUser } from '../../utils/userApi';
 import { useTheme } from '../../contexts/ThemeContext/useTheme';
 import './Header.css';
@@ -9,6 +10,7 @@ const Header = () => {
     queryFn: fetchUser,
   });
   const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
 
   const displayName = user ? `${user.firstName}. ${user.lastName}.` : '…';
 
@@ -24,6 +26,15 @@ const Header = () => {
           title={theme === 'light' ? 'Dark mode' : 'Light mode'}
         >
           {theme === 'light' ? '☾' : '☀'}
+        </button>
+        <button
+          className="header__settings"
+          type="button"
+          onClick={() => navigate('/settings')}
+          aria-label="Open settings"
+          title="User & Role Management"
+        >
+          ⚙
         </button>
         <button className="header__logout" type="button">
           Uitloggen

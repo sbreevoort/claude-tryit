@@ -5,6 +5,7 @@ import AuthContextProvider from './libs/shared/contexts/AuthContext/AuthContextP
 import SessionContextProvider from './libs/shared/contexts/SessionContext/SessionContextProvider';
 import GlobalContextProvider from './libs/shared/contexts/GlobalContext/GlobalContextProvider';
 import ThemeContextProvider from './libs/shared/contexts/ThemeContext/ThemeContextProvider';
+import { UserManagementProvider } from './libs/shared/contexts/UserManagementContext/UserManagementProvider';
 import ApplicationPortalRoutes from './ApplicationPortalRoutes';
 import { DefaultErrorBoundary } from './libs/shared/components/DefaultErrorBoundary/DefaultErrorBoundary';
 
@@ -18,7 +19,9 @@ const ApplicationPortal = () => (
           <GlobalContextProvider>
             <SessionContextProvider>
               <AuthContextProvider>
-                <ApplicationPortalRoutes />
+                <UserManagementProvider>
+                  <ApplicationPortalRoutes />
+                </UserManagementProvider>
               </AuthContextProvider>
             </SessionContextProvider>
           </GlobalContextProvider>
