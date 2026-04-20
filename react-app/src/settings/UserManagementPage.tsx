@@ -1,4 +1,5 @@
 import { useState, type FormEvent, type ChangeEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useUserManagement } from '../libs/shared/contexts/UserManagementContext/UserManagementContext';
 import { applications } from '../Applications';
@@ -158,6 +159,7 @@ const ConfirmDialog = ({ message, onConfirm, onCancel }: ConfirmDialogProps) => 
 );
 
 const UserManagementPage = () => {
+  const navigate = useNavigate();
   const { users, loading, addUser, updateUser, deleteUser } = useUserManagement();
   const queryClient = useQueryClient();
   const [showAddForm, setShowAddForm] = useState(false);
@@ -187,68 +189,81 @@ const UserManagementPage = () => {
     invalidateUser();
   };
 
+  const editingUser = editingId ? users.find((u) => u.id === editingId) ?? null : null;
+
   if (loading) {
     return (
-      <div className="user-mgmt">
-        <p className="user-mgmt__loading">Loading users…</p>
+      <div className="user-mgmt-container">
+        <div className="user-mgmt">
+          <p className="user-mgmt__loading">Loading users…</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="user-mgmt">
-      <div className="user-mgmt__header">
-        <h1 className="user-mgmt__title">User & Role Management</h1>
-        {!showAddForm && (
+    <div className="user-mgmt-container">
+      <div className="user-mgmt">
+        <nav className="user-mgmt__nav" aria-label="Navigation">
           <button
             type="button"
-            className="btn btn--primary"
-            onClick={() => {
-              setShowAddForm(true);
-              setEditingId(null);
-            }}
+            className="user-mgmt__back-btn"
+            onClick={() => navigate('/')}
+            aria-label="Back to Portal"
           >
-            + Add User
+            ← Back to Portal
           </button>
+        </nav>
+
+        <div className="user-mgmt__header">
+          <h1 className="user-mgmt__title">User & Role Management</h1>
+          {!showAddForm && !editingId && (
+            <button
+              type="button"
+              className="btn btn--primary"
+              onClick={() => setShowAddForm(true)}
+            >
+              + Add User
+            </button>
+          )}
+        </div>
+
+        {showAddForm && (
+          <UserForm
+            title="Add New User"
+            onSave={handleAdd}
+            onCancel={() => setShowAddForm(false)}
+          />
         )}
-      </div>
 
-      {showAddForm && (
-        <UserForm
-          title="Add New User"
-          onSave={handleAdd}
-          onCancel={() => setShowAddForm(false)}
-        />
-      )}
+        {editingUser && (
+          <UserForm
+            title={`Edit ${editingUser.firstName} ${editingUser.lastName}`}
+            initial={toFormData(editingUser)}
+            onSave={handleUpdate(editingUser.id)}
+            onCancel={() => setEditingId(null)}
+          />
+        )}
 
-      {users.length === 0 ? (
-        <p className="user-mgmt__empty">No users yet. Add one above.</p>
-      ) : (
-        <div className="user-mgmt__table-wrapper">
-          <table className="user-table">
-            <thead>
-              <tr>
-                <th className="user-table__th">Name</th>
-                <th className="user-table__th">Email</th>
-                <th className="user-table__th">Roles</th>
-                <th className="user-table__th user-table__th--actions">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user) =>
-                editingId === user.id ? (
-                  <tr key={user.id}>
-                    <td colSpan={4} className="user-table__td user-table__td--form">
-                      <UserForm
-                        title={`Edit ${user.firstName} ${user.lastName}`}
-                        initial={toFormData(user)}
-                        onSave={handleUpdate(user.id)}
-                        onCancel={() => setEditingId(null)}
-                      />
-                    </td>
-                  </tr>
-                ) : (
-                  <tr key={user.id} className="user-table__row">
+        {users.length === 0 ? (
+          <p className="user-mgmt__empty">No users yet. Add one above.</p>
+        ) : (
+          <div className="user-mgmt__table-wrapper">
+            <table className="user-table">
+              <thead>
+                <tr>
+                  <th className="user-table__th">Name</th>
+                  <th className="user-table__th">Email</th>
+                  <th className="user-table__th">Roles</th>
+                  <th className="user-table__th user-table__th--actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((user) => (
+                  <tr
+                    key={user.id}
+                    className={`user-table__row${editingId === user.id ? ' user-table__row--editing' : ''}`}
+                  >
                     <td className="user-table__td user-table__td--name">
                       {user.firstName} {user.lastName}
                     </td>
@@ -284,20 +299,20 @@ const UserManagementPage = () => {
                       </button>
                     </td>
                   </tr>
-                ),
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
-      {deleteId && (
-        <ConfirmDialog
-          message={`Delete user "${users.find((u) => u.id === deleteId)?.firstName} ${users.find((u) => u.id === deleteId)?.lastName}"? This action cannot be undone.`}
-          onConfirm={handleDelete}
-          onCancel={() => setDeleteId(null)}
-        />
-      )}
+        {deleteId && (
+          <ConfirmDialog
+            message={`Delete user "${users.find((u) => u.id === deleteId)?.firstName} ${users.find((u) => u.id === deleteId)?.lastName}"? This action cannot be undone.`}
+            onConfirm={handleDelete}
+            onCancel={() => setDeleteId(null)}
+          />
+        )}
+      </div>
     </div>
   );
 };
