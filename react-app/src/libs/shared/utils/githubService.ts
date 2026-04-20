@@ -13,6 +13,14 @@ export interface CreatedIssue {
   url: string;
 }
 
+export interface ExistingIssue {
+  number: number;
+  title: string;
+  body: string;
+  url: string;
+  state: 'open' | 'closed';
+}
+
 export interface LinkedPR {
   number: number;
   title: string;
@@ -71,6 +79,53 @@ export const createIssue = async (
 
   const data = await response.json();
   return { number: data.number, url: data.html_url };
+};
+
+export const listIssues = async (repo: string): Promise<ExistingIssue[]> => {
+  const [owner, repoName] = repo.split('/');
+  const response = await fetch(
+    `${GITHUB_API}/repos/${owner}/${repoName}/issues?state=open&per_page=100`,
+    { headers: getHeaders() }
+  );
+
+  if (!response.ok) {
+    throw new Error(`GitHub API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return (data as Array<{ number: number; title: string; body: string | null; html_url: string; state: string; pull_request?: unknown }>)
+    .filter((item) => !item.pull_request)
+    .map((item) => ({
+      number: item.number,
+      title: item.title,
+      body: item.body ?? '',
+      url: item.html_url,
+      state: item.state as 'open' | 'closed',
+    }));
+};
+
+export const createIssueComment = async (
+  repo: string,
+  issueNumber: number,
+  body: string
+): Promise<CreatedIssue> => {
+  const [owner, repoName] = repo.split('/');
+  const response = await fetch(
+    `${GITHUB_API}/repos/${owner}/${repoName}/issues/${issueNumber}/comments`,
+    {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ body }),
+    }
+  );
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({})) as { message?: string };
+    throw new Error(err.message ?? `GitHub API error: ${response.status}`);
+  }
+
+  const data = await response.json() as { html_url: string };
+  return { number: issueNumber, url: data.html_url };
 };
 
 export const fetchIssueStatus = async (
