@@ -161,6 +161,7 @@ export const CreatorApp = (_props: AppComponentProps) => {
 
   // Tracking state
   const [published, setPublished] = useState<CreatedIssue | null>(null);
+  const [refinementCommentId, setRefinementCommentId] = useState<number | null>(null);
   const [issueStatus, setIssueStatus] = useState<IssueStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -221,10 +222,12 @@ export const CreatorApp = (_props: AppComponentProps) => {
   const { mutate: submitComment, isPending: isSubmittingComment } = useMutation({
     mutationFn: () => {
       if (!selectedIssue) throw new Error('No idea selected');
-      return createIssueComment(GITHUB_REPO, selectedIssue.number, editedBody);
+      const bodyWithTrigger = `Hey @claude!\n\n${editedBody}`;
+      return createIssueComment(GITHUB_REPO, selectedIssue.number, bodyWithTrigger);
     },
     onSuccess: (data) => {
       setPublished(data);
+      setRefinementCommentId(data.commentId ?? null);
       setStep('tracking');
       setError(null);
     },
@@ -238,7 +241,8 @@ export const CreatorApp = (_props: AppComponentProps) => {
 
     const poll = async () => {
       try {
-        const status = await fetchIssueStatus(GITHUB_REPO, published.number);
+        const afterId = refinementCommentId ?? undefined;
+        const status = await fetchIssueStatus(GITHUB_REPO, published.number, afterId);
         setIssueStatus(status);
       } catch {
         // silent fail — will retry on next interval
@@ -251,7 +255,7 @@ export const CreatorApp = (_props: AppComponentProps) => {
     return () => {
       if (pollingRef.current) clearInterval(pollingRef.current);
     };
-  }, [step, published]);
+  }, [step, published, refinementCommentId]);
 
   const resetToStart = () => {
     setStep('choice');
@@ -264,6 +268,7 @@ export const CreatorApp = (_props: AppComponentProps) => {
     setEditedTitle('');
     setEditedBody('');
     setPublished(null);
+    setRefinementCommentId(null);
     setIssueStatus(null);
     setError(null);
   };
