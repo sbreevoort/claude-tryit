@@ -47,10 +47,10 @@ const generateIssue = async (idea: string): Promise<GeneratedIssue> => {
           role: 'user',
           content:
             `You are a technical product manager for the AI Application Portal (AAP). ` +
-            `Transform the following app idea into a structured GitHub issue. ` +
+            `Transform the following app idea into a structured feature request. ` +
             `Return ONLY a valid JSON object with exactly two keys: ` +
-            `"title" (concise issue title, no markdown) and ` +
-            `"body" (complete GitHub issue body in Markdown with sections: ` +
+            `"title" (concise idea title, no markdown) and ` +
+            `"body" (complete idea request body in Markdown with sections: ` +
             `## Description, ## Requirements, ## Implementation Steps, ## Acceptance Criteria). ` +
             `App idea: ${idea}`,
         },
@@ -70,9 +70,9 @@ const generateIssue = async (idea: string): Promise<GeneratedIssue> => {
 };
 
 const AGENT_STATUS_CONFIG: Record<AgentStatus, { label: string; icon: ReactNode }> = {
-  pending: { label: 'Wacht op Claude...', icon: '⏳' },
-  in_progress: { label: 'Claude is aan het bouwen...', icon: <span className="creator__spinner" /> },
-  review: { label: 'Code klaar voor review', icon: '✓' },
+  pending: { label: 'Waiting for Claude...', icon: '⏳' },
+  in_progress: { label: 'Claude is building...', icon: <span className="creator__spinner" /> },
+  review: { label: 'Code ready for review', icon: '✓' },
 };
 
 function AgentStatusRow({ agentStatus }: { agentStatus: AgentStatus }) {
@@ -107,7 +107,7 @@ export const CreatorApp = (_props: AppComponentProps) => {
       setError(null);
     },
     onError: (err: Error) => {
-      setError(`Failed to generate issue: ${err.message}`);
+      setError(`Failed to generate idea: ${err.message}`);
     },
   });
 
@@ -122,7 +122,7 @@ export const CreatorApp = (_props: AppComponentProps) => {
       setError(null);
     },
     onError: (err: Error) => {
-      setError(`Failed to publish issue: ${err.message}`);
+      setError(`Failed to submit idea: ${err.message}`);
     },
   });
 
@@ -162,7 +162,7 @@ export const CreatorApp = (_props: AppComponentProps) => {
     <div className="creator">
       <h1>Creator</h1>
       <p className="creator__subtitle">
-        Generate, review, and publish new AI app feature requests to GitHub.
+        Generate, review, and publish new AI app feature requests.
       </p>
 
       <div className="creator__steps">
@@ -213,16 +213,16 @@ export const CreatorApp = (_props: AppComponentProps) => {
         <div className="creator__panel">
           <h2>Review &amp; Edit</h2>
           <div className="creator__field">
-            <label className="creator__label">Issue Title</label>
+            <label className="creator__label">Idea Title</label>
             <input
               className="creator__input"
               value={editedTitle}
               onChange={(e) => setEditedTitle(e.target.value)}
-              placeholder="Issue title..."
+              placeholder="Idea title..."
             />
           </div>
           <div className="creator__field">
-            <label className="creator__label">Issue Body (Markdown)</label>
+            <label className="creator__label">Idea Description (Markdown)</label>
             <textarea
               className="creator__textarea"
               value={editedBody}
@@ -245,7 +245,7 @@ export const CreatorApp = (_props: AppComponentProps) => {
               disabled={editedTitle.trim() === '' || editedBody.trim() === ''}
               onClick={() => publish()}
             >
-              Publish to GitHub
+              Submit Idea
             </Button>
           </div>
         </div>
@@ -256,7 +256,7 @@ export const CreatorApp = (_props: AppComponentProps) => {
           <h2>Status Tracker</h2>
           <div className="creator__tracker">
             <div className="creator__tracker-issue">
-              <span className="creator__tracker-label">Issue</span>
+              <span className="creator__tracker-label">Idea</span>
               <a
                 href={published.url}
                 target="_blank"
