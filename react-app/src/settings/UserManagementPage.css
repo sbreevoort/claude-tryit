@@ -1,0 +1,349 @@
+.user-mgmt {
+  padding: 2rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.user-mgmt__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.user-mgmt__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-heading);
+  margin: 0;
+}
+
+.user-mgmt__loading,
+.user-mgmt__empty {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+/* Buttons */
+.btn {
+  padding: 0.375rem 0.875rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  line-height: 1.5;
+}
+
+.btn--sm {
+  padding: 0.25rem 0.625rem;
+  font-size: 0.8125rem;
+}
+
+.btn--primary {
+  background: var(--brand-primary);
+  color: #fff;
+  border-color: var(--brand-primary);
+}
+
+.btn--primary:hover {
+  background: var(--brand-primary-hover);
+  border-color: var(--brand-primary-hover);
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.btn--ghost:hover {
+  background: var(--bg-surface-hover);
+  border-color: var(--border-hover);
+}
+
+.btn--danger {
+  background: #dc2626;
+  color: #fff;
+  border-color: #dc2626;
+}
+
+.btn--danger:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
+}
+
+.btn--danger-outline {
+  background: transparent;
+  color: #dc2626;
+  border-color: #dc2626;
+}
+
+.btn--danger-outline:hover {
+  background: #fef2f2;
+  border-color: #b91c1c;
+}
+
+[data-theme="dark"] .btn--danger-outline:hover {
+  background: rgba(220, 38, 38, 0.15);
+}
+
+/* Table */
+.user-mgmt__table-wrapper {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-surface);
+}
+
+.user-table__th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.user-table__th--actions {
+  text-align: right;
+}
+
+.user-table__row:not(:last-child) .user-table__td {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.user-table__row:hover .user-table__td {
+  background: var(--bg-surface-hover);
+}
+
+.user-table__td {
+  padding: 0.875rem 1rem;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  transition: background 0.1s ease;
+}
+
+.user-table__td--form {
+  padding: 0;
+}
+
+.user-table__td--name {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.user-table__td--email {
+  color: var(--text-secondary);
+}
+
+.user-table__td--actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.user-table__td--actions .btn + .btn {
+  margin-left: 0.5rem;
+}
+
+.user-table__no-roles {
+  color: var(--text-secondary);
+  font-style: italic;
+  font-size: 0.875rem;
+}
+
+.user-table__role-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+/* Role badge */
+.role-badge {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  background: var(--bg-badge);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  color: var(--text-primary);
+  font-family: monospace;
+}
+
+/* User form card */
+.user-form-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.user-form-card__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-heading);
+  margin: 0 0 1rem 0;
+}
+
+.user-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.user-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.875rem;
+}
+
+.user-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.user-form__label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.user-form__input {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  background: var(--bg-app);
+  transition: border-color 0.15s ease;
+  outline: none;
+}
+
+.user-form__input:focus {
+  border-color: var(--brand-primary);
+}
+
+.user-form__input--error {
+  border-color: #dc2626;
+}
+
+.user-form__error {
+  font-size: 0.8rem;
+  color: #dc2626;
+}
+
+.user-form__actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+/* Role picker */
+.role-picker {
+  position: relative;
+}
+
+.role-picker__toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  background: var(--bg-app);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s ease;
+}
+
+.role-picker__toggle:hover {
+  border-color: var(--border-hover);
+}
+
+.role-picker__chevron {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  margin-left: 0.5rem;
+}
+
+.role-picker__dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.375rem 0;
+  z-index: 100;
+  max-height: 220px;
+  overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.role-picker__option {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.875rem;
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+
+.role-picker__option:hover {
+  background: var(--bg-surface-hover);
+}
+
+.role-picker__label {
+  font-size: 0.85rem;
+  font-family: monospace;
+  color: var(--text-primary);
+}
+
+/* Confirm dialog */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.confirm-dialog {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 1.5rem 2rem;
+  max-width: 420px;
+  width: 90%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.confirm-dialog__message {
+  margin: 0 0 1.25rem 0;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+.confirm-dialog__actions {
+  display: flex;
+  gap: 0.625rem;
+  justify-content: flex-end;
+}

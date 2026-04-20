@@ -1,16 +1,8 @@
-interface UserData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  roles: string[];
-}
+import { fetchInitialUsers, loadUsers } from './userRolesStorage';
+export type { User as UserData } from './userRolesStorage';
 
-export const fetchUser = async (): Promise<UserData> => {
-  await new Promise((resolve) => setTimeout(resolve, 500));
-  return {
-    firstName: 'Stefan',
-    lastName: 'B',
-    email: 'sb@tst.randstadgroep.nl',
-    roles: ['MKBTOOL_ADMIN', 'Integration_Dashboard_Client_Int_Tech_user', 'VITALITY_USER', 'AI_TESTER', 'PITCH_GENERATOR', 'CREATOR_ADMIN', 'DRESSAGE_READER'],
-  };
+export const fetchUser = async () => {
+  const users = loadUsers() ?? (await fetchInitialUsers());
+  if (!users.length) throw new Error('No users configured');
+  return users[0];
 };
