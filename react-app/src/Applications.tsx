@@ -81,4 +81,13 @@ export const applications: Application[] = [
       import('./apps/dressagereader').then((m) => ({ default: m.DressageReaderApp }))
     ),
   },
+  {
+    name: 'Nutrition Advisor',
+    avatar: 'NUT',
+    routePath: '/nutrition',
+    accessRoles: ['NUTRITION_USER'],
+    component: lazy(() =>
+      import('./apps/nutrition').then((m) => ({ default: m.NutritionAdvisorApp }))
+    ),
+  },
 ];
