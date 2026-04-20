@@ -11,6 +11,7 @@ function getHeaders() {
 export interface CreatedIssue {
   number: number;
   url: string;
+  commentId?: number;
 }
 
 export interface ExistingIssue {
@@ -39,6 +40,7 @@ export interface IssueStatus {
 }
 
 interface IssueComment {
+  id: number;
   body: string;
   user: {
     login: string;
@@ -46,8 +48,12 @@ interface IssueComment {
   };
 }
 
-function determineAgentStatus(comments: IssueComment[]): AgentStatus {
-  const agentComments = comments.filter(
+function determineAgentStatus(comments: IssueComment[], afterCommentId?: number): AgentStatus {
+  const relevant = afterCommentId
+    ? comments.filter((c) => c.id > afterCommentId)
+    : comments;
+
+  const agentComments = relevant.filter(
     (c) => c.user.type === 'Bot' || c.user.login.endsWith('[bot]')
   );
 
@@ -124,13 +130,14 @@ export const createIssueComment = async (
     throw new Error(err.message ?? `GitHub API error: ${response.status}`);
   }
 
-  const data = await response.json() as { html_url: string };
-  return { number: issueNumber, url: data.html_url };
+  const data = await response.json() as { html_url: string; id: number };
+  return { number: issueNumber, url: data.html_url, commentId: data.id };
 };
 
 export const fetchIssueStatus = async (
   repo: string,
-  issueNumber: number
+  issueNumber: number,
+  afterCommentId?: number
 ): Promise<IssueStatus> => {
   const [owner, repoName] = repo.split('/');
 
@@ -155,7 +162,7 @@ export const fetchIssueStatus = async (
   const issue = await issueRes.json();
 
   const comments: IssueComment[] = commentsRes.ok ? await commentsRes.json() : [];
-  const agentStatus = determineAgentStatus(comments);
+  const agentStatus = determineAgentStatus(comments, afterCommentId);
 
   const linkedPRs: LinkedPR[] = [];
   if (searchRes.ok) {
