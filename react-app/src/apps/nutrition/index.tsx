@@ -1,0 +1,1 @@
+export { NutritionAdvisorApp } from './NutritionApp';

@@ -12,7 +12,8 @@
         "AI_TESTER",
         "PITCH_GENERATOR",
         "CREATOR_ADMIN",
-        "DRESSAGE_READER"
+        "DRESSAGE_READER",
+        "NUTRITION_USER"
       ]
     }
   ]
