@@ -9,6 +9,8 @@ interface DressageTest {
   steps: string[];
 }
 
+const SELF_NARRATION_VALUE = '__self__';
+
 const DRESSAGE_TESTS: DressageTest[] = [{
     "id": "B20",
     "title": "Proef B20",
@@ -26,6 +28,7 @@ export const DressageReaderApp = (_props: AppComponentProps) => {
   const [isFinished, setIsFinished] = useState(false);
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
+  const [isSelfNarration, setIsSelfNarration] = useState(false);
   const activeStepRef = useRef<HTMLLIElement | null>(null);
 
   useEffect(() => {
@@ -33,7 +36,11 @@ export const DressageReaderApp = (_props: AppComponentProps) => {
       const voices = window.speechSynthesis.getVoices().filter(v => v.lang.includes('nl'));
       if (voices.length > 0) {
         setAvailableVoices(voices);
-        setSelectedVoice(prev => prev ?? voices[0]);
+        setSelectedVoice(prev => {
+          if (prev) return prev;
+          const googleVoice = voices.find(v => v.name.toLowerCase().includes('google'));
+          return googleVoice ?? voices[0];
+        });
       }
     };
     loadVoices();
@@ -57,10 +64,12 @@ export const DressageReaderApp = (_props: AppComponentProps) => {
   const handleVoorlezen = () => {
     if (!selectedTest) return;
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(selectedTest.steps[currentStepIndex]);
-    if (selectedVoice) utterance.voice = selectedVoice;
-    utterance.lang = 'nl-NL';
-    window.speechSynthesis.speak(utterance);
+    if (!isSelfNarration) {
+      const utterance = new SpeechSynthesisUtterance(selectedTest.steps[currentStepIndex]);
+      if (selectedVoice) utterance.voice = selectedVoice;
+      utterance.lang = 'nl-NL';
+      window.speechSynthesis.speak(utterance);
+    }
     if (currentStepIndex < selectedTest.steps.length - 1) {
       setCurrentStepIndex(i => i + 1);
     } else {
@@ -78,6 +87,8 @@ export const DressageReaderApp = (_props: AppComponentProps) => {
     setIsFinished(false);
   };
 
+  const selectValue = isSelfNarration ? SELF_NARRATION_VALUE : (selectedVoice?.name ?? '');
+
   return (
     <div className="dressage-reader">
       <aside className="dressage-reader__panel">
@@ -88,28 +99,33 @@ export const DressageReaderApp = (_props: AppComponentProps) => {
           </p>
         </div>
 
-        {availableVoices.length > 0 && (
-          <div className="dressage-reader__voice-section">
-            <label className="dressage-reader__section-label" htmlFor="voice-select">
-              Stem
-            </label>
-            <select
-              id="voice-select"
-              className="dressage-reader__voice-select"
-              value={selectedVoice?.name ?? ''}
-              onChange={e => {
+        <div className="dressage-reader__voice-section">
+          <label className="dressage-reader__section-label" htmlFor="voice-select">
+            Stem
+          </label>
+          <select
+            id="voice-select"
+            className="dressage-reader__voice-select"
+            value={selectValue}
+            onChange={e => {
+              if (e.target.value === SELF_NARRATION_VALUE) {
+                setSelectedVoice(null);
+                setIsSelfNarration(true);
+              } else {
                 const voice = availableVoices.find(v => v.name === e.target.value) ?? null;
                 setSelectedVoice(voice);
-              }}
-            >
-              {availableVoices.map(v => (
-                <option key={v.name} value={v.name}>
-                  {v.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+                setIsSelfNarration(false);
+              }
+            }}
+          >
+            {availableVoices.map(v => (
+              <option key={v.name} value={v.name}>
+                {v.name}
+              </option>
+            ))}
+            <option value={SELF_NARRATION_VALUE}>Zelf voorlezen</option>
+          </select>
+        </div>
 
         <div className="dressage-reader__test-section">
           <span className="dressage-reader__section-label">Proeven</span>
@@ -176,7 +192,7 @@ export const DressageReaderApp = (_props: AppComponentProps) => {
                 onClick={handleVoorlezen}
                 disabled={isFinished}
               >
-                ▶&nbsp;&nbsp;Voorlezen Stap
+                {isSelfNarration ? 'Volgende Stap' : '▶\u00a0\u00a0Voorlezen Stap'}
               </Button>
               <Button
                 type="button"
