@@ -441,7 +441,7 @@ export const CreatorApp = (_props: AppComponentProps) => {
 
       {step === 'select' && (
         <div className="creator__panel">
-          <h2>{mode === 'approve' ? 'Select an Idea to Approve' : 'Select an Existing Idea'}</h2>
+          <h2>{mode === 'approve' ? 'Select an Idea to Approve' : 'Select an Idea to Refine'}</h2>
           <div className="creator__field">
             <input
               className="creator__input"
