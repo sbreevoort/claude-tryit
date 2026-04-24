@@ -30,6 +30,7 @@ export const DressageReaderApp = (_props: AppComponentProps) => {
   const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
   const [isSelfNarration, setIsSelfNarration] = useState(false);
   const activeStepRef = useRef<HTMLLIElement | null>(null);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   useEffect(() => {
     const loadVoices = () => {
@@ -54,8 +55,16 @@ export const DressageReaderApp = (_props: AppComponentProps) => {
     activeStepRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }, [currentStepIndex]);
 
-  const handleSelectTest = (test: DressageTest) => {
+  const cancelActiveUtterance = () => {
+    if (utteranceRef.current) {
+      utteranceRef.current.onend = null;
+      utteranceRef.current = null;
+    }
     window.speechSynthesis.cancel();
+  };
+
+  const handleSelectTest = (test: DressageTest) => {
+    cancelActiveUtterance();
     setSelectedTest(test);
     setCurrentStepIndex(0);
     setIsFinished(false);
@@ -63,26 +72,38 @@ export const DressageReaderApp = (_props: AppComponentProps) => {
 
   const handleVoorlezen = () => {
     if (!selectedTest) return;
-    window.speechSynthesis.cancel();
+    cancelActiveUtterance();
+
+    const advanceStep = () => {
+      if (currentStepIndex < selectedTest.steps.length - 1) {
+        setCurrentStepIndex(i => i + 1);
+      } else {
+        setIsFinished(true);
+      }
+    };
+
     if (!isSelfNarration) {
       const utterance = new SpeechSynthesisUtterance(selectedTest.steps[currentStepIndex]);
       if (selectedVoice) utterance.voice = selectedVoice;
       utterance.lang = 'nl-NL';
+      utterance.onend = () => {
+        utteranceRef.current = null;
+        advanceStep();
+      };
+      utteranceRef.current = utterance;
       window.speechSynthesis.speak(utterance);
-    }
-    if (currentStepIndex < selectedTest.steps.length - 1) {
-      setCurrentStepIndex(i => i + 1);
     } else {
-      setIsFinished(true);
+      advanceStep();
     }
   };
 
   const handleVorigeStap = () => {
+    cancelActiveUtterance();
     if (currentStepIndex > 0) setCurrentStepIndex(i => i - 1);
   };
 
   const handleReset = () => {
-    window.speechSynthesis.cancel();
+    cancelActiveUtterance();
     setCurrentStepIndex(0);
     setIsFinished(false);
   };
