@@ -5,10 +5,20 @@ import { Button } from '../../libs/shared/components';
 import {
   createIssue,
   createIssueComment,
+  createPullRequestForIssue,
   fetchIssueStatus,
+  fetchPRCheckStatus,
   listIssues,
+  mergePullRequest,
 } from '../../libs/shared/utils/githubService';
-import type { AgentStatus, CreatedIssue, ExistingIssue, IssueStatus } from '../../libs/shared/utils/githubService';
+import type {
+  AgentStatus,
+  CreatedIssue,
+  ExistingIssue,
+  IssueStatus,
+  LinkedPR,
+  PRCheckStatus,
+} from '../../libs/shared/utils/githubService';
 import './Creator.css';
 
 const GITHUB_REPO = 'sbreevoort/claude-tryit';
@@ -18,11 +28,12 @@ interface GeneratedContent {
   body: string;
 }
 
-type Mode = 'new' | 'existing' | null;
+type Mode = 'new' | 'existing' | 'approve' | null;
 type Step = 'choice' | 'select' | 'input' | 'review' | 'tracking';
 
 const NEW_STEPS: Step[] = ['choice', 'input', 'review', 'tracking'];
 const EXISTING_STEPS: Step[] = ['choice', 'select', 'review', 'tracking'];
+const APPROVE_STEPS: Step[] = ['choice', 'select', 'tracking'];
 
 const STEP_LABELS: Record<Step, string> = {
   choice: 'Choose Mode',
@@ -33,7 +44,9 @@ const STEP_LABELS: Record<Step, string> = {
 };
 
 function getSteps(mode: Mode): Step[] {
-  return mode === 'existing' ? EXISTING_STEPS : NEW_STEPS;
+  if (mode === 'existing') return EXISTING_STEPS;
+  if (mode === 'approve') return APPROVE_STEPS;
+  return NEW_STEPS;
 }
 
 function stepIndex(step: Step, mode: Mode): number {
@@ -126,6 +139,8 @@ const AGENT_STATUS_CONFIG: Record<AgentStatus, { label: string; icon: ReactNode 
   pending: { label: 'Waiting for Claude...', icon: '⏳' },
   in_progress: { label: 'Claude is building...', icon: <span className="creator__spinner" /> },
   review: { label: 'Code ready for review', icon: '✓' },
+  reviewing: { label: 'Checks running...', icon: <span className="creator__spinner" /> },
+  ready_to_merge: { label: 'All checks passed — merging...', icon: '✓' },
 };
 
 function AgentStatusRow({ agentStatus }: { agentStatus: AgentStatus }) {
@@ -148,7 +163,7 @@ export const CreatorApp = (_props: AppComponentProps) => {
   // New idea state
   const [idea, setIdea] = useState('');
 
-  // Existing idea state
+  // Existing / approve idea state
   const [issues, setIssues] = useState<ExistingIssue[]>([]);
   const [issueSearch, setIssueSearch] = useState('');
   const [selectedIssue, setSelectedIssue] = useState<ExistingIssue | null>(null);
@@ -159,10 +174,16 @@ export const CreatorApp = (_props: AppComponentProps) => {
   const [editedTitle, setEditedTitle] = useState('');
   const [editedBody, setEditedBody] = useState('');
 
-  // Tracking state
+  // Tracking state (new / existing modes)
   const [published, setPublished] = useState<CreatedIssue | null>(null);
   const [refinementCommentId, setRefinementCommentId] = useState<number | null>(null);
   const [issueStatus, setIssueStatus] = useState<IssueStatus | null>(null);
+
+  // Tracking state (approve mode)
+  const [createdPR, setCreatedPR] = useState<LinkedPR | null>(null);
+  const [prCheckStatus, setPrCheckStatus] = useState<PRCheckStatus | null>(null);
+  const hasMergedRef = useRef(false);
+
   const [error, setError] = useState<string | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -236,8 +257,24 @@ export const CreatorApp = (_props: AppComponentProps) => {
     },
   });
 
+  const { mutate: createPRForIssue, isPending: isCreatingPR } = useMutation({
+    mutationFn: () => {
+      if (!selectedIssue) throw new Error('No issue selected');
+      return createPullRequestForIssue(GITHUB_REPO, selectedIssue.number, selectedIssue.title);
+    },
+    onSuccess: (data) => {
+      setCreatedPR(data);
+      setStep('tracking');
+      setError(null);
+    },
+    onError: (err: Error) => {
+      setError(`Failed to create PR: ${err.message}`);
+    },
+  });
+
+  // Polling: new / existing modes
   useEffect(() => {
-    if (step !== 'tracking' || !published) return;
+    if (step !== 'tracking' || mode === 'approve' || !published) return;
 
     const poll = async () => {
       try {
@@ -255,7 +292,56 @@ export const CreatorApp = (_props: AppComponentProps) => {
     return () => {
       if (pollingRef.current) clearInterval(pollingRef.current);
     };
-  }, [step, published, refinementCommentId]);
+  }, [step, mode, published, refinementCommentId]);
+
+  // Polling: approve mode — checks PR status and auto-merges when ready
+  useEffect(() => {
+    if (step !== 'tracking' || mode !== 'approve' || !createdPR) return;
+
+    let stopped = false;
+
+    const poll = async () => {
+      if (stopped) return;
+      try {
+        const status = await fetchPRCheckStatus(GITHUB_REPO, createdPR.number);
+        if (stopped) return;
+
+        if (status.agentStatus === 'ready_to_merge' && !hasMergedRef.current) {
+          hasMergedRef.current = true;
+          if (pollingRef.current) {
+            clearInterval(pollingRef.current);
+            pollingRef.current = null;
+          }
+          try {
+            await mergePullRequest(GITHUB_REPO, status.number);
+            if (!stopped) {
+              setPrCheckStatus({ ...status, merged: true, prState: 'closed' });
+            }
+          } catch (mergeErr) {
+            hasMergedRef.current = false;
+            if (!stopped) {
+              setError(`Auto-merge failed: ${(mergeErr as Error).message}`);
+              setPrCheckStatus(status);
+              // Restart polling after merge failure
+              pollingRef.current = setInterval(poll, 12000);
+            }
+          }
+        } else {
+          setPrCheckStatus(status);
+        }
+      } catch {
+        // silent fail — will retry on next interval
+      }
+    };
+
+    poll();
+    pollingRef.current = setInterval(poll, 12000);
+
+    return () => {
+      stopped = true;
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
+  }, [step, mode, createdPR]);
 
   const resetToStart = () => {
     setStep('choice');
@@ -270,6 +356,9 @@ export const CreatorApp = (_props: AppComponentProps) => {
     setPublished(null);
     setRefinementCommentId(null);
     setIssueStatus(null);
+    setCreatedPR(null);
+    setPrCheckStatus(null);
+    hasMergedRef.current = false;
     setError(null);
   };
 
@@ -313,9 +402,9 @@ export const CreatorApp = (_props: AppComponentProps) => {
         <div className="creator__panel">
           <h2>What would you like to do?</h2>
           <p className="creator__choice-subtitle">
-            Submit a brand-new idea or add a refinement to an existing one.
+            Submit a brand-new idea, refine an existing one, or approve a finished idea.
           </p>
-          <div className="creator__choice-grid">
+          <div className="creator__choice-grid creator__choice-grid--3">
             <button
               className="creator__choice-card"
               onClick={() => { setMode('new'); setStep('input'); }}
@@ -336,13 +425,23 @@ export const CreatorApp = (_props: AppComponentProps) => {
                 Add a comment or refinement to an idea that already exists.
               </span>
             </button>
+            <button
+              className="creator__choice-card"
+              onClick={() => { setMode('approve'); setStep('select'); }}
+            >
+              <span className="creator__choice-icon">✓</span>
+              <span className="creator__choice-title">Approve Existing Idea</span>
+              <span className="creator__choice-desc">
+                Create a PR for a finished idea and auto-merge once checks pass.
+              </span>
+            </button>
           </div>
         </div>
       )}
 
       {step === 'select' && (
         <div className="creator__panel">
-          <h2>Select an Existing Idea</h2>
+          <h2>{mode === 'approve' ? 'Select an Idea to Approve' : 'Select an Existing Idea'}</h2>
           <div className="creator__field">
             <input
               className="creator__input"
@@ -376,7 +475,7 @@ export const CreatorApp = (_props: AppComponentProps) => {
               ))}
             </div>
           )}
-          {selectedIssue && (
+          {mode === 'existing' && selectedIssue && (
             <div className="creator__field">
               <label className="creator__label">Describe your refinement</label>
               <textarea
@@ -396,7 +495,17 @@ export const CreatorApp = (_props: AppComponentProps) => {
             >
               Back
             </Button>
-            {selectedIssue && (
+            {mode === 'approve' && selectedIssue && (
+              <Button
+                type="button"
+                buttonStyle="filled"
+                isLoading={isCreatingPR}
+                onClick={() => createPRForIssue()}
+              >
+                Approve &amp; Create PR
+              </Button>
+            )}
+            {mode === 'existing' && selectedIssue && (
               <Button
                 type="button"
                 buttonStyle="filled"
@@ -505,80 +614,146 @@ export const CreatorApp = (_props: AppComponentProps) => {
         </div>
       )}
 
-      {step === 'tracking' && published && (
+      {step === 'tracking' && (mode === 'approve' || published) && (
         <div className="creator__panel">
           <h2>Status Tracker</h2>
           <div className="creator__tracker">
-            <div className="creator__tracker-issue">
-              <span className="creator__tracker-label">Idea</span>
-              <a
-                href={
-                  mode === 'existing' && selectedIssue
-                    ? selectedIssue.url
-                    : published.url
-                }
-                target="_blank"
-                rel="noopener noreferrer"
-                className="creator__link"
-              >
-                #{published.number}
-              </a>
-              {issueStatus ? (
-                <span className={`creator__badge creator__badge--${issueStatus.state}`}>
-                  {issueStatus.state}
-                </span>
-              ) : (
-                <span className="creator__badge creator__badge--loading">
-                  Loading...
-                </span>
-              )}
-            </div>
-
-            {mode === 'existing' && (
-              <div className="creator__comment-success">
-                <span>✓ Comment posted</span>
-                <a
-                  href={published.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="creator__link"
-                >
-                  View comment
-                </a>
-              </div>
-            )}
-
-            {issueStatus && (
-              <AgentStatusRow agentStatus={issueStatus.agentStatus} />
-            )}
-
-            {issueStatus && issueStatus.linkedPRs.length > 0 && (
-              <div className="creator__tracker-prs">
-                <h3>Linked Pull Requests</h3>
-                {issueStatus.linkedPRs.map((pr) => (
-                  <div key={pr.number} className="creator__pr-item">
+            {mode === 'approve' ? (
+              <>
+                {selectedIssue && (
+                  <div className="creator__tracker-issue">
+                    <span className="creator__tracker-label">Issue</span>
                     <a
-                      href={pr.url}
+                      href={selectedIssue.url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="creator__link"
                     >
-                      #{pr.number} {pr.title}
+                      #{selectedIssue.number} {selectedIssue.title}
                     </a>
-                    <span className={`creator__badge creator__badge--${pr.state}`}>
-                      {pr.state}
+                  </div>
+                )}
+                {createdPR && (
+                  <div className="creator__tracker-issue">
+                    <span className="creator__tracker-label">Pull Request</span>
+                    <a
+                      href={createdPR.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="creator__link"
+                    >
+                      #{createdPR.number}
+                    </a>
+                    {prCheckStatus ? (
+                      <span
+                        className={`creator__badge ${
+                          prCheckStatus.merged
+                            ? 'creator__badge--merged'
+                            : `creator__badge--${prCheckStatus.prState}`
+                        }`}
+                      >
+                        {prCheckStatus.merged ? 'merged' : prCheckStatus.prState}
+                      </span>
+                    ) : (
+                      <span className="creator__badge creator__badge--loading">Loading...</span>
+                    )}
+                  </div>
+                )}
+                {prCheckStatus && !prCheckStatus.merged && (
+                  <AgentStatusRow agentStatus={prCheckStatus.agentStatus} />
+                )}
+                {prCheckStatus?.merged ? (
+                  <div className="creator__comment-success">
+                    <span>
+                      ✓ PR merged successfully! Issue #{selectedIssue?.number} will be automatically closed.
                     </span>
                   </div>
-                ))}
-              </div>
-            )}
+                ) : (
+                  <p className="creator__tracker-note">
+                    Auto-refreshing every 12 seconds. PR will be merged automatically when all checks pass.
+                  </p>
+                )}
+              </>
+            ) : (
+              published && (
+                <>
+                  <div className="creator__tracker-issue">
+                    <span className="creator__tracker-label">Idea</span>
+                    <a
+                      href={
+                        mode === 'existing' && selectedIssue
+                          ? selectedIssue.url
+                          : published.url
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="creator__link"
+                    >
+                      #{published.number}
+                    </a>
+                    {issueStatus ? (
+                      <span className={`creator__badge creator__badge--${issueStatus.state}`}>
+                        {issueStatus.state}
+                      </span>
+                    ) : (
+                      <span className="creator__badge creator__badge--loading">
+                        Loading...
+                      </span>
+                    )}
+                  </div>
 
-            <p className="creator__tracker-note">Auto-refreshing every 10 seconds.</p>
+                  {mode === 'existing' && (
+                    <div className="creator__comment-success">
+                      <span>✓ Comment posted</span>
+                      <a
+                        href={published.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="creator__link"
+                      >
+                        View comment
+                      </a>
+                    </div>
+                  )}
+
+                  {issueStatus && (
+                    <AgentStatusRow agentStatus={issueStatus.agentStatus} />
+                  )}
+
+                  {issueStatus && issueStatus.linkedPRs.length > 0 && (
+                    <div className="creator__tracker-prs">
+                      <h3>Linked Pull Requests</h3>
+                      {issueStatus.linkedPRs.map((pr) => (
+                        <div key={pr.number} className="creator__pr-item">
+                          <a
+                            href={pr.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="creator__link"
+                          >
+                            #{pr.number} {pr.title}
+                          </a>
+                          <span className={`creator__badge creator__badge--${pr.state}`}>
+                            {pr.state}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <p className="creator__tracker-note">Auto-refreshing every 10 seconds.</p>
+                </>
+              )
+            )}
           </div>
 
           <div className="flex justify-end gap-2">
             <Button type="button" buttonStyle="ghost" onClick={resetToStart}>
-              {mode === 'existing' ? 'Add Another Refinement' : 'Create Another'}
+              {mode === 'approve'
+                ? 'Approve Another'
+                : mode === 'existing'
+                ? 'Add Another Refinement'
+                : 'Create Another'}
             </Button>
           </div>
         </div>

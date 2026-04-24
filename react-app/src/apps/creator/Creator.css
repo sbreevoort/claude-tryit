@@ -252,6 +252,12 @@
   border: 1px solid #fde68a;
 }
 
+.creator__badge--merged {
+  background: #ede9fe;
+  color: #6d28d9;
+  border: 1px solid #c4b5fd;
+}
+
 /* Agent Status */
 .creator__agent-status {
   display: flex;
@@ -275,6 +281,16 @@
 .creator__agent-status--review {
   background: #f0fdf4;
   border-color: #bbf7d0;
+}
+
+.creator__agent-status--reviewing {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.creator__agent-status--ready_to_merge {
+  background: #f0fdf4;
+  border-color: #86efac;
 }
 
 .creator__agent-status-icon {
@@ -318,6 +334,16 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
+}
+
+.creator__choice-grid--3 {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+@media (max-width: 600px) {
+  .creator__choice-grid--3 {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 500px) {
