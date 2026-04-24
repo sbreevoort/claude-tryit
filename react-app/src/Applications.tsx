@@ -46,7 +46,7 @@ export const applications: Application[] = [
     ),
   },
   {
-    name: 'AI Tester',
+    name: 'AI Connection Tester',
     avatar: 'AI',
     routePath: '/ai-test',
     accessRoles: ['AI_TESTER'],
