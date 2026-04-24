@@ -22,11 +22,13 @@ export interface Meal {
   ingredients: string[];
   preparation: string;
   excludeFor: DietaryRestriction[];
+  kidFriendly?: boolean;
 }
 
 export interface UserProfile {
   name: string;
   restrictions: DietaryRestriction[];
+  childMode?: boolean;
 }
 
 export interface DailyMealPlan {

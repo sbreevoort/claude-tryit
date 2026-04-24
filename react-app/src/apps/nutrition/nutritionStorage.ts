@@ -6,6 +6,7 @@ const defaultState: NutritionState = {
   profile: {
     name: '',
     restrictions: ['no_bread' as DietaryRestriction],
+    childMode: false,
   },
   plans: [],
 };

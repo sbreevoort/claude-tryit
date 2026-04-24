@@ -147,7 +147,7 @@ const initState = (): NutritionState => {
   const s = loadState();
   const today = todayDate();
   if (getPlanForDate(s.plans, today)) return s;
-  const plan = generateDailyPlan(today, s.profile.restrictions, s.plans, null);
+  const plan = generateDailyPlan(today, s.profile.restrictions, s.plans, null, s.profile.childMode ?? false);
   const updatedPlans = upsertPlan(s.plans, plan);
   const next = { ...s, plans: updatedPlans };
   saveState(next);
@@ -161,10 +161,14 @@ export const NutritionAdvisorApp = (_props: AppComponentProps) => {
   const [profileRestrictions, setProfileRestrictions] = useState<DietaryRestriction[]>(
     () => loadState().profile.restrictions
   );
+  const [profileChildMode, setProfileChildMode] = useState<boolean>(
+    () => loadState().profile.childMode ?? false
+  );
   const [profileSaved, setProfileSaved] = useState(false);
 
   const today = todayDate();
-  const dailyMessage = getDailyMessage();
+  const childMode = state.profile.childMode ?? false;
+  const dailyMessage = getDailyMessage(childMode);
 
   const currentPlan: DailyMealPlan | null = getPlanForDate(state.plans, today);
 
@@ -172,7 +176,7 @@ export const NutritionAdvisorApp = (_props: AppComponentProps) => {
     setState((s) => {
       const plan = getPlanForDate(s.plans, today);
       if (!plan) return s;
-      const updated = regenerateMeal(plan, type, s.profile.restrictions, s.plans);
+      const updated = regenerateMeal(plan, type, s.profile.restrictions, s.plans, s.profile.childMode ?? false);
       const updatedPlans = upsertPlan(s.plans, updated);
       const next = { ...s, plans: updatedPlans };
       saveState(next);
@@ -182,7 +186,7 @@ export const NutritionAdvisorApp = (_props: AppComponentProps) => {
 
   const handleRegenerateAll = () => {
     setState((s) => {
-      const plan = generateDailyPlan(today, s.profile.restrictions, s.plans, null);
+      const plan = generateDailyPlan(today, s.profile.restrictions, s.plans, null, s.profile.childMode ?? false);
       const updatedPlans = upsertPlan(s.plans, plan);
       const next = { ...s, plans: updatedPlans };
       saveState(next);
@@ -197,11 +201,10 @@ export const NutritionAdvisorApp = (_props: AppComponentProps) => {
   };
 
   const handleSaveProfile = () => {
-    const profile = { name: profileName, restrictions: profileRestrictions };
+    const profile = { name: profileName, restrictions: profileRestrictions, childMode: profileChildMode };
     setState((s) => {
       const next = saveProfile(s, profile);
-      // Re-generate today's plan with new restrictions
-      const plan = generateDailyPlan(today, profile.restrictions, next.plans, null);
+      const plan = generateDailyPlan(today, profile.restrictions, next.plans, null, profile.childMode);
       const updatedPlans = upsertPlan(next.plans, plan);
       const final = { ...next, plans: updatedPlans };
       saveState(final);
@@ -216,7 +219,7 @@ export const NutritionAdvisorApp = (_props: AppComponentProps) => {
 
   return (
     <div className="nutrition">
-      <div className="nutrition__hero">
+      <div className={clsx('nutrition__hero', { 'nutrition__hero--child': childMode })}>
         <div className="nutrition__hero-content">
           <div className="nutrition__hero-text">
             <h1 className="nutrition__title">
@@ -224,18 +227,23 @@ export const NutritionAdvisorApp = (_props: AppComponentProps) => {
             </h1>
             <p className="nutrition__subtitle">{formatDate(today)}</p>
           </div>
-          <button
-            className={clsx('nutrition-btn nutrition-btn--ghost nutrition-btn--profile', {
-              'nutrition-btn--active': showProfile,
-            })}
-            onClick={() => setShowProfile((v) => !v)}
-          >
-            ⚙ Preferences
-          </button>
+          <div className="nutrition__hero-controls">
+            {childMode && (
+              <span className="nutrition__mode-badge">🧒 Kid-Friendly Mode</span>
+            )}
+            <button
+              className={clsx('nutrition-btn nutrition-btn--ghost nutrition-btn--profile', {
+                'nutrition-btn--active': showProfile,
+              })}
+              onClick={() => setShowProfile((v) => !v)}
+            >
+              ⚙ Preferences
+            </button>
+          </div>
         </div>
 
         <div className="nutrition__motivation">
-          <span className="nutrition__motivation-icon">💬</span>
+          <span className="nutrition__motivation-icon">{childMode ? '⭐' : '💬'}</span>
           <p className="nutrition__motivation-text">{dailyMessage}</p>
         </div>
       </div>
@@ -255,6 +263,41 @@ export const NutritionAdvisorApp = (_props: AppComponentProps) => {
               onChange={(e) => setProfileName(e.target.value)}
               placeholder="Enter your name"
             />
+          </div>
+          <div className="nutrition-profile__field">
+            <label className="nutrition-profile__label">Recipe Mode</label>
+            <div className="nutrition-mode-toggle">
+              <span
+                className={clsx('nutrition-mode-toggle__option', {
+                  'nutrition-mode-toggle__option--active': !profileChildMode,
+                })}
+              >
+                👨 Adult
+              </span>
+              <button
+                role="switch"
+                aria-checked={profileChildMode}
+                aria-label="Toggle child mode"
+                className={clsx('nutrition-mode-switch', {
+                  'nutrition-mode-switch--child': profileChildMode,
+                })}
+                onClick={() => setProfileChildMode((v) => !v)}
+              >
+                <span className="nutrition-mode-switch__thumb" />
+              </button>
+              <span
+                className={clsx('nutrition-mode-toggle__option', {
+                  'nutrition-mode-toggle__option--active': profileChildMode,
+                })}
+              >
+                🧒 Child (ages 5–12)
+              </span>
+            </div>
+            {profileChildMode && (
+              <p className="nutrition-profile__hint">
+                Kid-friendly recipes with familiar flavours, simple ingredients and fun presentations!
+              </p>
+            )}
           </div>
           <div className="nutrition-profile__field">
             <label className="nutrition-profile__label">Dietary restrictions</label>

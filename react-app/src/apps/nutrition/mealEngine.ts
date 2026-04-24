@@ -1,5 +1,5 @@
 import type { Meal, MealType, DietaryRestriction, DailyMealPlan } from './types';
-import { meals, motivationalMessages } from './mealData';
+import { meals, motivationalMessages, childMessages } from './mealData';
 
 const seededRandom = (seed: number): number => {
   const x = Math.sin(seed + 1) * 10000;
@@ -10,9 +10,12 @@ const pickRandom = <T>(arr: T[], seed: number): T => {
   return arr[Math.floor(seededRandom(seed) * arr.length)];
 };
 
-export const getEligibleMeals = (type: MealType, restrictions: DietaryRestriction[]): Meal[] => {
+export const getEligibleMeals = (type: MealType, restrictions: DietaryRestriction[], childMode = false): Meal[] => {
   return meals.filter(
-    (m) => m.type === type && !m.excludeFor.some((r) => restrictions.includes(r))
+    (m) =>
+      m.type === type &&
+      !m.excludeFor.some((r) => restrictions.includes(r)) &&
+      (childMode ? m.kidFriendly === true : !m.kidFriendly)
   );
 };
 
@@ -35,9 +38,10 @@ export const pickMeal = (
   restrictions: DietaryRestriction[],
   plans: DailyMealPlan[],
   date: string,
-  seed: number
+  seed: number,
+  childMode = false
 ): Meal | null => {
-  const eligible = getEligibleMeals(type, restrictions);
+  const eligible = getEligibleMeals(type, restrictions, childMode);
   if (eligible.length === 0) return null;
 
   const recentIds = getRecentlyUsedIds(plans, type, date);
@@ -50,15 +54,16 @@ export const generateDailyPlan = (
   date: string,
   restrictions: DietaryRestriction[],
   plans: DailyMealPlan[],
-  existingPlan?: DailyMealPlan | null
+  existingPlan?: DailyMealPlan | null,
+  childMode = false
 ): DailyMealPlan => {
   const dateSeed = date.split('-').reduce((acc, n) => acc + parseInt(n, 10), 0);
   const now = Date.now();
 
-  const breakfast = pickMeal('breakfast', restrictions, plans, date, dateSeed + now);
-  const lunch = pickMeal('lunch', restrictions, plans, date, dateSeed + now + 1);
-  const dinner = pickMeal('dinner', restrictions, plans, date, dateSeed + now + 2);
-  const snack = pickMeal('snack', restrictions, plans, date, dateSeed + now + 3);
+  const breakfast = pickMeal('breakfast', restrictions, plans, date, dateSeed + now, childMode);
+  const lunch = pickMeal('lunch', restrictions, plans, date, dateSeed + now + 1, childMode);
+  const dinner = pickMeal('dinner', restrictions, plans, date, dateSeed + now + 2, childMode);
+  const snack = pickMeal('snack', restrictions, plans, date, dateSeed + now + 3, childMode);
 
   return {
     date,
@@ -73,9 +78,10 @@ export const regenerateMeal = (
   plan: DailyMealPlan,
   type: MealType,
   restrictions: DietaryRestriction[],
-  plans: DailyMealPlan[]
+  plans: DailyMealPlan[],
+  childMode = false
 ): DailyMealPlan => {
-  const meal = pickMeal(type, restrictions, plans, plan.date, Date.now());
+  const meal = pickMeal(type, restrictions, plans, plan.date, Date.now(), childMode);
   if (!meal) return plan;
   const updated = { ...plan };
   if (type === 'breakfast') updated.breakfastId = meal.id;
@@ -105,9 +111,10 @@ export const getDailyTotals = (plan: DailyMealPlan) => {
   );
 };
 
-export const getDailyMessage = (): string => {
+export const getDailyMessage = (childMode = false): string => {
   const dayOfYear = Math.floor(
     (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000
   );
-  return motivationalMessages[dayOfYear % motivationalMessages.length];
+  const messages = childMode ? childMessages : motivationalMessages;
+  return messages[dayOfYear % messages.length];
 };
