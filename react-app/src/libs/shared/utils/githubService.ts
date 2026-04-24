@@ -29,7 +29,7 @@ export interface LinkedPR {
   state: string;
 }
 
-export type AgentStatus = 'pending' | 'in_progress' | 'review';
+export type AgentStatus = 'pending' | 'in_progress' | 'review' | 'reviewing' | 'ready_to_merge';
 
 export interface IssueStatus {
   state: 'open' | 'closed';
@@ -132,6 +132,151 @@ export const createIssueComment = async (
 
   const data = await response.json() as { html_url: string; id: number };
   return { number: issueNumber, url: data.html_url, commentId: data.id };
+};
+
+export interface PRCheckStatus {
+  number: number;
+  url: string;
+  prState: 'open' | 'closed';
+  merged: boolean;
+  agentStatus: AgentStatus;
+}
+
+export const createPullRequestForIssue = async (
+  repo: string,
+  issueNumber: number,
+  issueTitle: string
+): Promise<LinkedPR> => {
+  const [owner, repoName] = repo.split('/');
+
+  // Detect default branch
+  const repoRes = await fetch(`${GITHUB_API}/repos/${owner}/${repoName}`, {
+    headers: getHeaders(),
+  });
+  if (!repoRes.ok) throw new Error(`GitHub API error: ${repoRes.status}`);
+  const repoData = await repoRes.json() as { default_branch: string };
+  const baseBranch = repoData.default_branch;
+
+  // Find the issue branch (pattern: claude/issue-{issueNumber}...)
+  const branchPattern = `claude/issue-${issueNumber}`;
+  let foundBranch: string | null = null;
+  let page = 1;
+  while (!foundBranch) {
+    const branchRes = await fetch(
+      `${GITHUB_API}/repos/${owner}/${repoName}/branches?per_page=100&page=${page}`,
+      { headers: getHeaders() }
+    );
+    if (!branchRes.ok) throw new Error(`GitHub API error: ${branchRes.status}`);
+    const branches = await branchRes.json() as Array<{ name: string }>;
+    const match = branches.find((b) => b.name.startsWith(branchPattern));
+    if (match) { foundBranch = match.name; break; }
+    if (branches.length < 100) break;
+    page++;
+  }
+
+  if (!foundBranch) {
+    throw new Error(
+      `No branch found for issue #${issueNumber} (expected pattern: ${branchPattern})`
+    );
+  }
+
+  // Create the PR
+  const prRes = await fetch(`${GITHUB_API}/repos/${owner}/${repoName}/pulls`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({
+      title: `Merge: ${issueTitle}`,
+      body: `Closes #${issueNumber}`,
+      head: foundBranch,
+      base: baseBranch,
+    }),
+  });
+
+  if (!prRes.ok) {
+    const err = await prRes.json().catch(() => ({})) as { message?: string };
+    throw new Error(err.message ?? `GitHub API error: ${prRes.status}`);
+  }
+
+  const pr = await prRes.json() as { number: number; html_url: string; title: string; state: string };
+  return { number: pr.number, title: pr.title, url: pr.html_url, state: pr.state };
+};
+
+export const fetchPRCheckStatus = async (
+  repo: string,
+  prNumber: number
+): Promise<PRCheckStatus> => {
+  const [owner, repoName] = repo.split('/');
+
+  const prRes = await fetch(
+    `${GITHUB_API}/repos/${owner}/${repoName}/pulls/${prNumber}`,
+    { headers: getHeaders() }
+  );
+  if (!prRes.ok) throw new Error(`GitHub API error: ${prRes.status}`);
+
+  const pr = await prRes.json() as {
+    number: number;
+    html_url: string;
+    state: string;
+    merged: boolean;
+    head: { sha: string };
+  };
+
+  if (pr.merged) {
+    return { number: pr.number, url: pr.html_url, prState: 'closed', merged: true, agentStatus: 'ready_to_merge' };
+  }
+  if (pr.state === 'closed') {
+    return { number: pr.number, url: pr.html_url, prState: 'closed', merged: false, agentStatus: 'reviewing' };
+  }
+
+  // Check check-runs for head SHA
+  const checksRes = await fetch(
+    `${GITHUB_API}/repos/${owner}/${repoName}/commits/${pr.head.sha}/check-runs?per_page=100`,
+    { headers: getHeaders() }
+  );
+
+  if (!checksRes.ok) {
+    return { number: pr.number, url: pr.html_url, prState: 'open', merged: false, agentStatus: 'reviewing' };
+  }
+
+  const checksData = await checksRes.json() as {
+    check_runs: Array<{ status: string; conclusion: string | null }>;
+  };
+  const runs = checksData.check_runs;
+
+  if (runs.length === 0) {
+    return { number: pr.number, url: pr.html_url, prState: 'open', merged: false, agentStatus: 'reviewing' };
+  }
+
+  const allComplete = runs.every((r) => r.status === 'completed');
+  const allPassed =
+    allComplete &&
+    runs.every(
+      (r) => r.conclusion === 'success' || r.conclusion === 'skipped' || r.conclusion === 'neutral'
+    );
+
+  return {
+    number: pr.number,
+    url: pr.html_url,
+    prState: 'open',
+    merged: false,
+    agentStatus: allPassed ? 'ready_to_merge' : 'reviewing',
+  };
+};
+
+export const mergePullRequest = async (repo: string, prNumber: number): Promise<void> => {
+  const [owner, repoName] = repo.split('/');
+  const res = await fetch(
+    `${GITHUB_API}/repos/${owner}/${repoName}/pulls/${prNumber}/merge`,
+    {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify({ merge_method: 'squash' }),
+    }
+  );
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({})) as { message?: string };
+    throw new Error(err.message ?? `GitHub API error: ${res.status}`);
+  }
 };
 
 export const fetchIssueStatus = async (
